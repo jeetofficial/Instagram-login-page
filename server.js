@@ -58,12 +58,9 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // req.url me query string bhi aa sakti hai (e.g. /login?x=1) aur trailing
-  // slash bhi (/login/) — dono ko normalize kar lete hain taaki match ho jaye.
   const urlPath = req.url.split('?')[0].replace(/\/+$/, '') || '/';
 
-  // GET / — root pe HTML page serve karo, taaki browser me
-  // http://localhost:3000 kholne par 404 na aaye
+  // GET / — root pe HTML page serve karo
   if (req.method === 'GET' && urlPath === '/') {
     fs.readFile(HTML_FILE, (err, data) => {
       if (err) {
@@ -74,6 +71,12 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(data);
     });
+    return;
+  }
+
+  // GET /api/health — UptimeRobot isko ping karega taaki server sleep na ho
+  if (req.method === 'GET' && urlPath === '/api/health') {
+    sendJSON(res, 200, { status: 'online', provider: 'Groq' });
     return;
   }
 
@@ -88,7 +91,6 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      // ✅ Terminal mein print hoga
       console.log('═══════════════════════════');
       console.log('📩 Naya Login Request Aaya!');
       console.log('📧 Username:', data.username);
@@ -101,7 +103,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // POST /forgot-password route — frontend isko call karta hai
+  // POST /forgot-password route
   if (req.method === 'POST' && urlPath === '/forgot-password') {
     readBody(req, res, (body) => {
       let data;
@@ -122,8 +124,6 @@ const server = http.createServer((req, res) => {
   send404(res, 'Route nahi mila');
 });
 
-
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, () => {
   console.log(`✅ Server chal raha hai: http://localhost:${PORT}`);
 });
-
